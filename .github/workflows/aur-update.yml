@@ -1,0 +1,43 @@
+name: Check and Update AUR Package
+
+on:
+  schedule:
+    - cron: '0 0 * * *' 
+  workflow_dispatch: 
+
+jobs:
+  check-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Fetch Latest Version from Upstream
+        id: upstream
+        run: |
+          LATEST_TAG=$(curl -s https://api.github.com/repos/dupitydumb/Audion/releases/latest | jq -r .tag_name | sed 's/^v//')
+          echo "latest_version=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Update PKGBUILD Version String
+        id: update
+        run: |
+          CURRENT_VERSION=$(grep -oP 'pkgver=\K.*' PKGBUILD)
+          LATEST_VERSION="${{ steps.upstream.outputs.latest_version }}"
+          
+          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+            sed -i "s/pkgver=.*/pkgver=$LATEST_VERSION/" PKGBUILD
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to AUR
+        if: steps.update.outputs.updated == 'true'
+        uses: KSXGitHub/github-actions-deploy-aur@v4
+        with:
+          pkgname: audion-bin
+          pkgbuild: ./PKGBUILD
+          commit_username: Kavy-Codes
+          commit_email: kavyatiwari.dev@gmail.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "chore: automated upgrade to v${{ steps.upstream.outputs.latest_version }}"
