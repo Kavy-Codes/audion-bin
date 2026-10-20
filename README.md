@@ -1,6 +1,7 @@
 # audion-bin
 
 <!-- START_VERSION_LOGS -->
+* **2026-10-20** — Automatically updated and deployed package release files to **v1.4.1**.
 * **2026-10-19** — Automatically updated and deployed package release files to **vnull**.
 * **2026-09-29** — Automatically updated and deployed package release files to **v1.4.1**.
 * **2026-09-24** — Automatically updated and deployed package release files to **v1.4.0**.
